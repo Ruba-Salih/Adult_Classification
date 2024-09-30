@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-
 """Modified Decision Tree Classifier for the Adult Census Dataset."""
+
 import pandas as pd
 from sklearn import tree
 from sklearn.impute import SimpleImputer
@@ -27,7 +27,6 @@ adult_data[nominal_txt] = imputer_nominal.fit_transform(adult_data[nominal_txt])
 imputer_ordinal = SimpleImputer(strategy='most_frequent')
 adult_data[ordinal_txt] = imputer_ordinal.fit_transform(adult_data[ordinal_txt])
 
-
 education_levels = [
     'Preschool', '1st-4th', '5th-6th', '7th-8th', '9th', '10th', '11th', '12th', 
     'HS-grad', 'Some-college', 'Assoc-acdm', 'Assoc-voc', 'Bachelors', 'Masters', 
@@ -37,16 +36,14 @@ education_levels = [
 ordinal_encoder = OrdinalEncoder(categories=[education_levels])
 adult_data['education'] = ordinal_encoder.fit_transform(adult_data[['education']])
 
-ordinal_encoder_nominal = OrdinalEncoder()
-adult_data[nominal_txt] = ordinal_encoder_nominal.fit_transform(adult_data[nominal_txt])
+adult_data = pd.get_dummies(adult_data, columns=nominal_txt, drop_first=True)
 
-# Separate the features (X) and the target variable (y)
 X_features = adult_data.drop('income', axis=1)
 y_target = adult_data['income']
 
+# Split the dataset into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X_features, y_target, test_size=0.2, random_state=42)
 
-# Train a Decision Tree Classifier
 classifier_tree = DecisionTreeClassifier(max_depth=3, random_state=42)
 classifier_tree.fit(X_train, y_train)
 
