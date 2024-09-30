@@ -4,7 +4,7 @@
 import pandas as pd
 from sklearn import tree
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OrdinalEncoder, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import precision_score, recall_score, accuracy_score, confusion_matrix
@@ -15,17 +15,17 @@ adult_data = pd.read_csv('adult.csv')
 
 # Handle missing values
 numerical = ['age', 'fnlwgt', 'education.num', 'capital.gain', 'capital.loss', 'hours.per.week']
-nominal_txt = ['workclass', 'occupation', 'native.country', 'marital.status', 'relationship', 'race', 'sex']
-ordinal_txt = ['education']
+nominal_cat = ['workclass', 'occupation', 'native.country', 'marital.status', 'relationship', 'race', 'sex']
+ordinal_cat = ['education']
 
 median_imputer = SimpleImputer(strategy='median')
 adult_data[numerical] = median_imputer.fit_transform(adult_data[numerical])
 
 imputer_nominal = SimpleImputer(strategy='most_frequent')
-adult_data[nominal_txt] = imputer_nominal.fit_transform(adult_data[nominal_txt])
+adult_data[nominal_cat] = imputer_nominal.fit_transform(adult_data[nominal_cat])
 
 imputer_ordinal = SimpleImputer(strategy='most_frequent')
-adult_data[ordinal_txt] = imputer_ordinal.fit_transform(adult_data[ordinal_txt])
+adult_data[ordinal_cat] = imputer_ordinal.fit_transform(adult_data[ordinal_cat])
 
 education_levels = [
     'Preschool', '1st-4th', '5th-6th', '7th-8th', '9th', '10th', '11th', '12th', 
@@ -36,14 +36,17 @@ education_levels = [
 ordinal_encoder = OrdinalEncoder(categories=[education_levels])
 adult_data['education'] = ordinal_encoder.fit_transform(adult_data[['education']])
 
-adult_data = pd.get_dummies(adult_data, columns=nominal_txt, drop_first=True)
+label_encoders = {}
+for feature in nominal_cat:
+    le = LabelEncoder()
+    adult_data[feature] = le.fit_transform(adult_data[feature])
+    label_encoders[feature] = le
 
 X_features = adult_data.drop('income', axis=1)
 y_target = adult_data['income']
-
-# Split the dataset into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X_features, y_target, test_size=0.2, random_state=42)
 
+# Train a Decision Tree Classifier (with a limit on tree depth for simplicity)
 classifier_tree = DecisionTreeClassifier(max_depth=3, random_state=42)
 classifier_tree.fit(X_train, y_train)
 
