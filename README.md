@@ -7,11 +7,11 @@ This project implements a **Decision Tree Classifier** to predict whether a pers
 - **adult.csv**: The dataset used for training and testing the classifier.
 - **main.py**: The main Python script that handles data preprocessing, model training, evaluation, and decision tree visualization.
 - **decision_tree_output.png**: The output file that contains the decision tree visualization after the model is trained.
-- **README.md**: This file.
 
 ## Dataset
 
 The dataset used is the **UCI Adult Census Income dataset**, which is commonly used for binary classification tasks. The target variable is whether a person earns more than $50K per year or not (`<=50K` or `>50K`). 
+- Dataset link: https://www.kaggle.com/datasets/uciml/adult-census-income
 
 The dataset contains both categorical and numerical features such as:
 - **age**: The age of the individual.
@@ -63,9 +63,6 @@ To run the project, follow these steps:
 ``` bash
 python3 main.py
 ```
-
-## License
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Author
 Ruba Salih
