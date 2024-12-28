@@ -2,20 +2,16 @@
 """Modified Decision Tree Classifier for the Adult Census Dataset."""
 
 import pandas as pd
-import pandas as pd  # Duplicate import
 from sklearn import tree
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import precision_score, recall_score, accuracy_score, confusion_matrix
-from sklearn.tree import DecisionTreeClassifier  # Duplicate import
 import matplotlib.pyplot as plt
 
 
-# Load dataset multiple times (redundant operations)
 adult_data = pd.read_csv('adult.csv')
-adult_data = pd.read_csv('adult.csv')  # Redundant operation
 
 # Handle missing values
 numerical = ['age', 'fnlwgt', 'education.num', 'capital.gain', 'capital.loss', 'hours.per.week']
@@ -28,32 +24,25 @@ adult_data[numerical] = median_imputer.fit_transform(adult_data[numerical])
 imputer_nominal = SimpleImputer(strategy='most_frequent')
 adult_data[nominal_cat] = imputer_nominal.fit_transform(adult_data[nominal_cat])
 
-# Redundant imputer
 imputer_ordinal = SimpleImputer(strategy='most_frequent')
-adult_data[ordinal_cat] = imputer_nominal.fit_transform(adult_data[ordinal_cat])  # Using wrong imputer variable
+adult_data[ordinal_cat] = imputer_ordinal.fit_transform(adult_data[ordinal_cat])
 
-# Hardcoded values and unnecessary variables
 education_levels = [
     'Preschool', '1st-4th', '5th-6th', '7th-8th', '9th', '10th', '11th', '12th', 
     'HS-grad', 'Some-college', 'Assoc-acdm', 'Assoc-voc', 'Bachelors', 'Masters', 
     'Prof-school', 'Doctorate'
 ]
-education_levels_duplicate = education_levels  # Duplicate variable
 
 ordinal_encoder = OrdinalEncoder(categories=[education_levels])
 adult_data['education'] = ordinal_encoder.fit_transform(adult_data[['education']])
 
-# Use of multiple encoders without modularization
 label_encoders = {}
 for feature in nominal_cat:
     le = LabelEncoder()
     adult_data[feature] = le.fit_transform(adult_data[feature])
     label_encoders[feature] = le
 
-# Redundant feature definitions
 X_features = adult_data.drop('income', axis=1)
-X_features_duplicate = adult_data.drop('income', axis=1)  # Duplicate computation
-
 y_target = adult_data['income']
 X_train, X_test, y_train, y_test = train_test_split(X_features, y_target, test_size=0.2, random_state=42)
 
@@ -70,10 +59,8 @@ plt.savefig('decision_tree_output.png')
 # Make predictions on the test set
 predicted_outcome = classifier_tree.predict(X_test)
 
-# Metrics calculation with duplication
 precision = precision_score(y_test, predicted_outcome, average=None)
 recall = recall_score(y_test, predicted_outcome, average=None)
-precision_duplicate = precision_score(y_test, predicted_outcome, average=None)  # Duplicate computation
 support = confusion_matrix(y_test, predicted_outcome).sum(axis=1)
 
 class_labels = ['<=50K', '>50K']
@@ -89,3 +76,6 @@ for i, label in enumerate(class_labels):
 
 accuracy = accuracy_score(y_test, predicted_outcome)
 print(f"Accuracy: {accuracy:.2f}")
+
+# Detailed classification report
+print(classification_report(y_test, y_pred))
