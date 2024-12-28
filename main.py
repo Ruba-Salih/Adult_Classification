@@ -4,8 +4,10 @@ import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.tree import DecisionTreeClassifier, export_text, plot_tree
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Step 1: Load the dataset (replace with your local path)
 data = pd.read_csv('path_to_your_file/adult.csv')
@@ -63,3 +65,23 @@ print(f"Accuracy: {accuracy:.2f}")
 
 # Detailed classification report
 print(classification_report(y_test, y_pred))
+
+# Step 10: Confusion Matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['<=50K', '>50K'], yticklabels=['<=50K', '>50K'])
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()
+
+# Step 11: Visualize the Decision Tree
+plt.figure(figsize=(20, 10))
+plot_tree(clf, feature_names=X.columns, class_names=['<=50K', '>50K'], filled=True, rounded=True)
+plt.title('Decision Tree Visualization')
+plt.show()
+
+# Step 12: Display Decision Rules
+tree_rules = export_text(clf, feature_names=list(X.columns))
+print("\nDecision Tree Rules:")
+print(tree_rules)
