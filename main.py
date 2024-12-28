@@ -1,87 +1,78 @@
 #!/usr/bin/python3
-"""This is the base model class for AirBnB"""
+"""Modified Decision Tree Classifier for the Adult Census Dataset."""
+
 import pandas as pd
+from sklearn import tree
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OrdinalEncoder, LabelEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier, export_text, plot_tree
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import precision_score, recall_score, accuracy_score, confusion_matrix
 import matplotlib.pyplot as plt
-import seaborn as sns
 
-# Step 1: Load the dataset (replace with your local path)
-data = pd.read_csv('path_to_your_file/adult.csv')
 
-# Step 2: Handle missing values
+adult_data = pd.read_csv('adult.csv')
 
-# Define the columns that are numerical and categorical
-num_cols = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'capital-loss', 'hours-per-week']
-cat_cols_nominal = ['workclass', 'occupation', 'native-country']  # Nominal categorical columns
-cat_cols_ordinal = ['education']  # Ordinal categorical column with inherent order
+# Handle missing values
+numerical = ['age', 'fnlwgt', 'education.num', 'capital.gain', 'capital.loss', 'hours.per.week']
+nominal_cat = ['workclass', 'occupation', 'native.country', 'marital.status', 'relationship', 'race', 'sex']
+ordinal_cat = ['education']
 
-# Imputer for numerical columns (filling with the median)
-imputer_num = SimpleImputer(strategy='median')
-data[num_cols] = imputer_num.fit_transform(data[num_cols])
+median_imputer = SimpleImputer(strategy='median')
+adult_data[numerical] = median_imputer.fit_transform(adult_data[numerical])
 
-# Imputer for nominal categorical columns (filling with the most frequent value - mode)
-imputer_cat_nominal = SimpleImputer(strategy='most_frequent')
-data[cat_cols_nominal] = imputer_cat_nominal.fit_transform(data[cat_cols_nominal])
+imputer_nominal = SimpleImputer(strategy='most_frequent')
+adult_data[nominal_cat] = imputer_nominal.fit_transform(adult_data[nominal_cat])
 
-# Imputer for ordinal categorical columns (filling with the most frequent value - mode)
-imputer_cat_ordinal = SimpleImputer(strategy='most_frequent')
-data[cat_cols_ordinal] = imputer_cat_ordinal.fit_transform(data[cat_cols_ordinal])
+imputer_ordinal = SimpleImputer(strategy='most_frequent')
+adult_data[ordinal_cat] = imputer_ordinal.fit_transform(adult_data[ordinal_cat])
 
-# Step 3: Ordinal Encoding for education (ordered categories)
-# Define the ordered categories for education
-education_categories = [
+education_levels = [
     'Preschool', '1st-4th', '5th-6th', '7th-8th', '9th', '10th', '11th', '12th', 
-    'HS-grad', 'Some-college', 'Bachelors', 'Masters', 'Doctorate'
+    'HS-grad', 'Some-college', 'Assoc-acdm', 'Assoc-voc', 'Bachelors', 'Masters', 
+    'Prof-school', 'Doctorate'
 ]
 
-# Apply Ordinal Encoding
-encoder_ordinal = OrdinalEncoder(categories=[education_categories])
-data['education'] = encoder_ordinal.fit_transform(data[['education']])
+ordinal_encoder = OrdinalEncoder(categories=[education_levels])
+adult_data['education'] = ordinal_encoder.fit_transform(adult_data[['education']])
 
-# Step 4: One-Hot Encoding for the remaining nominal categorical variables
-data = pd.get_dummies(data, columns=cat_cols_nominal, drop_first=True)
+label_encoders = {}
+for feature in nominal_cat:
+    le = LabelEncoder()
+    adult_data[feature] = le.fit_transform(adult_data[feature])
+    label_encoders[feature] = le
 
-# Step 5: Split the data into features (X) and target variable (y)
-X = data.drop('income', axis=1)  # Features (input data)
-y = data['income']               # Target (what we want to predict)
+X_features = adult_data.drop('income', axis=1)
+y_target = adult_data['income']
+X_train, X_test, y_train, y_test = train_test_split(X_features, y_target, test_size=0.2, random_state=42)
 
-# Step 6: Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Train a Decision Tree Classifier (with a limit on tree depth for simplicity)
+classifier_tree = DecisionTreeClassifier(max_depth=3, random_state=42)
+classifier_tree.fit(X_train, y_train)
 
-# Step 7: Train the Decision Tree Classifier
-clf = DecisionTreeClassifier(random_state=42)
-clf.fit(X_train, y_train)
+# Visualize the Decision Tree and save it as an image
+plt.figure(figsize=(12, 7))
+tree.plot_tree(classifier_tree, filled=True, rounded=True, feature_names=X_features.columns,
+                class_names=['<=50K', '>50K'], proportion=False, impurity=False, fontsize=10)
+plt.savefig('decision_tree_output.png')
 
-# Step 8: Predict on the test set
-y_pred = clf.predict(X_test)
+# Make predictions on the test set
+predicted_outcome = classifier_tree.predict(X_test)
 
-# Step 9: Evaluate the model
-accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, predicted_outcome, average=None)
+recall = recall_score(y_test, predicted_outcome, average=None)
+support = confusion_matrix(y_test, predicted_outcome).sum(axis=1)
+
+class_labels = ['<=50K', '>50K']
+
+print("Classification Report:")
+print("-" * 40)
+for i, label in enumerate(class_labels):
+    print(f"Class {label}:")
+    print(f"   Precision: {precision[i]:.2f}")
+    print(f"   Recall:    {recall[i]:.2f}")
+    print(f"   Support:   {support[i]}")
+    print("-" * 40)
+
+accuracy = accuracy_score(y_test, predicted_outcome)
 print(f"Accuracy: {accuracy:.2f}")
-
-# Detailed classification report
-print(classification_report(y_test, y_pred))
-
-# Step 10: Confusion Matrix
-conf_matrix = confusion_matrix(y_test, y_pred)
-plt.figure(figsize=(8, 6))
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['<=50K', '>50K'], yticklabels=['<=50K', '>50K'])
-plt.xlabel('Predicted')
-plt.ylabel('Actual')
-plt.title('Confusion Matrix')
-plt.show()
-
-# Step 11: Visualize the Decision Tree
-plt.figure(figsize=(20, 10))
-plot_tree(clf, feature_names=X.columns, class_names=['<=50K', '>50K'], filled=True, rounded=True)
-plt.title('Decision Tree Visualization')
-plt.show()
-
-# Step 12: Display Decision Rules
-tree_rules = export_text(clf, feature_names=list(X.columns))
-print("\nDecision Tree Rules:")
-print(tree_rules)
